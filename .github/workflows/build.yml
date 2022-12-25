@@ -1,0 +1,19 @@
+name: Build
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Dependencies
+      run: sudo apt update && sudo apt install ninja-build cmake wget
+    - name: AndroidNDK
+      run: wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip && unzip android-ndk-r25b-linux.zip && export ANDROID_NDK=$(pwd)/android-ndk-r25b
+    - name: Permission
+      run: chmod +x build.sh && mkdir -p build && git submodule update --init --recursive
+    - name: Build
+      run: ./build.sh $ANDROID_NDK
