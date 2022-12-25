@@ -1,0 +1,5 @@
+out/
+build
+*.a
+.cache
+.vscode

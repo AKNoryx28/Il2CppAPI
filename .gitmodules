@@ -1,0 +1,6 @@
+[submodule "Dobby"]
+	path = Dobby
+	url = https://github.com/jmpews/Dobby.git
+[submodule "Obfuscate"]
+	path = Obfuscate
+	url = https://github.com/adamyaxley/Obfuscate
