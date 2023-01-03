@@ -65,45 +65,52 @@ void il2cpp_init(const char *domain_name) {
     return __il2cpp_init(domain_name);
 }
 
-Il2CppAPI::Il2CppAPI(const char* lib_name) {
+void *lib_handle;
+uintptr_t absoulute_address;
+const char *absoulute_path;
+bool attached;
+const char *target_lib;
+
+void Il2CppAPI::InitAPI(const char* lib_name) {
     int countTryOpen = 0;
     do {
         if (countTryOpen >= 10) {
             __android_log_print(ANDROID_LOG_ERROR, IL2CPP_LOG_TAG, AY_OBFUSCATE("ERRO: Failed to dlopen: %s"), lib_name);
             break;
         }
-        this->lib_handle = dlopen(lib_name, RTLD_LAZY);
-        __android_log_print(ANDROID_LOG_INFO, IL2CPP_LOG_TAG, "try dlopen: %s | %p", lib_name, this->lib_handle);
+        lib_handle = dlopen(lib_name, RTLD_LAZY);
+        __android_log_print(ANDROID_LOG_INFO, IL2CPP_LOG_TAG, "try dlopen: %s | %p", lib_name, lib_handle);
         countTryOpen += 1;
-    } while (this->lib_handle == nullptr);
+    } while (lib_handle == nullptr);
 
-    if (this->lib_handle != nullptr) {
+    if (lib_handle != nullptr) {
         Dl_info il2cpp_info;
-        dladdr(this->lib_handle, &il2cpp_info);
+        dladdr(lib_handle, &il2cpp_info);
         size_t len = strlen(il2cpp_info.dli_fname) + 1;
         char *lib_path = new char[len];
         memset((void*)lib_path, 0, len);
         strcpy(lib_path, il2cpp_info.dli_fname);
 
-        this->absoulute_address = (uintptr_t)il2cpp_info.dli_fbase;
-        this->absoulute_path = lib_path;
-        this->attached = false;
-        this->target_lib = lib_name;
+        absoulute_address = (uintptr_t)il2cpp_info.dli_fbase;
+        absoulute_path = lib_path;
+        attached = false;
+        target_lib = lib_name;
 
-        void *p_il2cpp_init = dlsym(this->lib_handle, AY_OBFUSCATE("il2cpp_init"));
+        void *p_il2cpp_init = dlsym(lib_handle, AY_OBFUSCATE("il2cpp_init"));
         if (p_il2cpp_init != nullptr)
             DobbyHook(p_il2cpp_init, (dobby_dummy_func_t)il2cpp_init, (dobby_dummy_func_t*)&__il2cpp_init);
-        __android_log_print(ANDROID_LOG_INFO, IL2CPP_LOG_TAG, AY_OBFUSCATE("Il2CppAPI: %p"), this);
+        __android_log_print(ANDROID_LOG_INFO, IL2CPP_LOG_TAG, AY_OBFUSCATE("Il2CppAPI"));
+        dlclose(lib_handle);
     } else {
-        this->absoulute_address = 0;
-        this->absoulute_path = AY_OBFUSCATE("failed when constructing Il2CpppAPI");
-        this->attached = false;
-        this->target_lib = lib_name;
-        __android_log_print(ANDROID_LOG_ERROR, IL2CPP_LOG_TAG, AY_OBFUSCATE("failed when constructing Il2CpppAPI: %p"), this);
+        absoulute_address = 0;
+        absoulute_path = AY_OBFUSCATE("failed when initialize Il2CpppAPI");
+        attached = false;
+        target_lib = lib_name;
+        __android_log_print(ANDROID_LOG_ERROR, IL2CPP_LOG_TAG, AY_OBFUSCATE("failed when constructing Il2CpppAPI"));
     }
 }
 
-Il2CppAPI::Il2CppAPI(JNIEnv *env, const char *lib_name) {
+void Il2CppAPI::InitAPI(JNIEnv *env, const char *lib_name) {
    jclass activityThread = env->FindClass("android/app/ActivityThread");
    jobject currentActivityThread = env->CallStaticObjectMethod(activityThread, 
            env->GetStaticMethodID(activityThread, "currentActivityThread", "()Landroid/app/ActivityThread;"));
@@ -116,49 +123,50 @@ Il2CppAPI::Il2CppAPI(JNIEnv *env, const char *lib_name) {
    jfieldID nativeLibraryDir = env->GetFieldID(env->GetObjectClass(appInfo), AY_OBFUSCATE("nativeLibraryDir"), AY_OBFUSCATE("Ljava/lang/String;"));
    const char *lib_path = env->GetStringUTFChars((jstring)env->GetObjectField(appInfo, nativeLibraryDir), nullptr);
 
-   this->absoulute_path = lib_path;
-   this->lib_handle = dlopen(lib_path, RTLD_LAZY);
-   if (this->lib_handle != nullptr) {
-        void *p_il2cpp_init = dlsym(this->lib_handle, AY_OBFUSCATE("il2cpp_init"));
+   absoulute_path = lib_path;
+   lib_handle = dlopen(lib_path, RTLD_LAZY);
+   if (lib_handle != nullptr) {
+        void *p_il2cpp_init = dlsym(lib_handle, AY_OBFUSCATE("il2cpp_init"));
         if (p_il2cpp_init != nullptr)
             DobbyHook(p_il2cpp_init, (dobby_dummy_func_t)il2cpp_init, (dobby_dummy_func_t*)&__il2cpp_init);
-        __android_log_print(ANDROID_LOG_INFO, IL2CPP_LOG_TAG, AY_OBFUSCATE("Il2CppAPI: %p"), this);
+        __android_log_print(ANDROID_LOG_INFO, IL2CPP_LOG_TAG, AY_OBFUSCATE("Il2CppAPI"));
 
 
         Dl_info il2cpp_info;
-        dladdr(this->lib_handle, &il2cpp_info);
+        dladdr(lib_handle, &il2cpp_info);
         size_t len = strlen(il2cpp_info.dli_fname) + 1;
         char *lib_path = new char[len];
         memset((void*)lib_path, 0, len);
         strcpy(lib_path, il2cpp_info.dli_fname);
 
-        this->absoulute_address = (uintptr_t)il2cpp_info.dli_fbase;
-        this->absoulute_path = lib_path;
-        this->attached = false;
-        this->target_lib = lib_name;
+        absoulute_address = (uintptr_t)il2cpp_info.dli_fbase;
+        absoulute_path = lib_path;
+        attached = false;
+        target_lib = lib_name;
+        dlclose(lib_handle);
     } else {
-        this->absoulute_address = 0;
-        this->absoulute_path = AY_OBFUSCATE("failed when constructing Il2CpppAPI");
-        this->attached = false;
-        this->target_lib = lib_name;
-        __android_log_print(ANDROID_LOG_ERROR, IL2CPP_LOG_TAG, AY_OBFUSCATE("BYPASS: failed when constructing Il2CpppAPI: %p"), this);
+        absoulute_address = 0;
+        absoulute_path = AY_OBFUSCATE("failed when constructing Il2CpppAPI");
+        attached = false;
+        target_lib = lib_name;
+        __android_log_print(ANDROID_LOG_ERROR, IL2CPP_LOG_TAG, AY_OBFUSCATE("failed when initialize Il2CpppAPI"));
     }
 }
 
 void *Il2CppAPI::GetLibHandle() {
-    return this->lib_handle;
+    return lib_handle;
 }
 
 uintptr_t Il2CppAPI::GetAbsolouteAddress() {
-    return this->absoulute_address;
+    return absoulute_address;
 }
 
 const char *Il2CppAPI::GetAbsoloutePath() {
-    return this->absoulute_path;
+    return absoulute_path;
 }
 
 bool Il2CppAPI::IsAttached() {
-    return this->attached;
+    return attached;
 }
 
 void Il2CppAPI::Detach() {
@@ -194,24 +202,14 @@ void Il2CppAPI::Detach() {
     il2cpp_thread_detach = nullptr;
     il2cpp_array_new = nullptr;
 
-    this->attached = false;
+    attached = false;
     il2cppAttached = false;
-    dlclose(this->lib_handle);
 }
-
-Il2CppAPI::~Il2CppAPI() {
-    this->lib_handle = nullptr;
-    this->absoulute_address = 0;
-    this->absoulute_path = nullptr;
-    this->target_lib = nullptr;
-    dlclose(this->lib_handle);
-}
-
 
 void Il2CppAPI::Attach() {
     void *il2cpp = nullptr;
     while (il2cpp == nullptr) {
-        il2cpp = dlopen(this->target_lib, 4);
+        il2cpp = dlopen(target_lib, 4);
     }
 
     il2cpp_image_get_name = (const char *(*)(void *)) dlsym(il2cpp, "il2cpp_image_get_name");
@@ -246,12 +244,12 @@ void Il2CppAPI::Attach() {
     il2cpp_array_new = (void *(*)(void *, uintptr_t))dlsym(il2cpp, "il2cpp_array_new");
 
     dlclose(il2cpp);
-    this->attached = true;
+    attached = true;
     il2cppAttached = true;
 }
 
 void *Il2CppAPI::GetImageByName(const char *image) {
-    if (!this->attached) return nullptr;
+    if (!attached) return nullptr;
     size_t size;
     void **assemblies = il2cpp_domain_get_assemblies(il2cpp_domain_get(), &size);
 
@@ -267,7 +265,7 @@ void *Il2CppAPI::GetImageByName(const char *image) {
 }
 
 void *Il2CppAPI::GetClassType(const char *image, const char *namespaze, const char *clazz) {
-    if (!this->attached) return nullptr;
+    if (!attached) return nullptr;
     static std::map<std::string, void *> cache;
 	std::string s = image;
 	s += namespaze;
@@ -288,7 +286,7 @@ void *Il2CppAPI::GetClassType(const char *image, const char *namespaze, const ch
 	return klass;
 }
 Class *Il2CppAPI::CreateClassInstance(const char *image, const char *namespaze, const char *clazz) {
-    if (!this->attached) return nullptr;
+    if (!attached) return nullptr;
     void *img = GetImageByName(image);
 	if (!img) {
 		__android_log_print(ANDROID_LOG_ERROR, IL2CPP_LOG_TAG, "Can't find image %s!", image);
@@ -307,12 +305,12 @@ Class *Il2CppAPI::CreateClassInstance(const char *image, const char *namespaze, 
 	return (Class*)obj;
 }
 
-bool Il2CppAPI::IsStaticField(void *field) {
+bool IsStaticField(void *field) {
     return (il2cpp_field_get_flags(field) & 0x10) != 0;
 }
 
 void Il2CppAPI::GetFieldValue(const char *image, const char *namespaze, const char *clazz, const char *name, void *output) {
-    if (!this->attached) return;
+    if (!attached) return;
     void *img = GetImageByName(image);
 	if (!img) {
 		__android_log_print(ANDROID_LOG_ERROR, IL2CPP_LOG_TAG, "Can't find image %s!", image);
@@ -336,7 +334,7 @@ void Il2CppAPI::GetFieldValue(const char *image, const char *namespaze, const ch
 }
 
 void Il2CppAPI::SetFieldValue(const char *image, const char *namespaze, const char *clazz, const char *name, void* value) {
-    if (!this->attached) return;
+    if (!attached) return;
     void *img = GetImageByName(image);
 	if (!img) {
 		__android_log_print(ANDROID_LOG_ERROR, IL2CPP_LOG_TAG, "Can't find image %s!", image);
@@ -358,8 +356,8 @@ void Il2CppAPI::SetFieldValue(const char *image, const char *namespaze, const ch
         il2cpp_field_set_value(klass, field, value);
     }
 }
-Method *Il2CppAPI::GetMethodByName(const char *image, const char *namespaze, const char *clazz, const char *name, int argsCount) {
-    if (!this->attached) return nullptr;
+void *Il2CppAPI::GetMethodByName(const char *image, const char *namespaze, const char *clazz, const char *name, int argsCount) {
+    if (!attached) return nullptr;
     void *img = GetImageByName(image);
 	if (!img) {
 		__android_log_print(ANDROID_LOG_ERROR, IL2CPP_LOG_TAG, "Can't find image %s!", image);
@@ -376,10 +374,10 @@ Method *Il2CppAPI::GetMethodByName(const char *image, const char *namespaze, con
 		return 0;
 	}
 	__android_log_print(ANDROID_LOG_DEBUG, IL2CPP_LOG_TAG, "%s - [%s] %s::%s: %p", image, namespaze, clazz, name, *method);
-	return (Method*)method;
+	return method;
 }
-Method *Il2CppAPI::GetMethodByName(const char *image, const char *namespaze, const char *clazz, const char *name, char **args, int argsCount) {
-    if (!this->attached) return nullptr;
+void *Il2CppAPI::GetMethodByName(const char *image, const char *namespaze, const char *clazz, const char *name, char **args, int argsCount) {
+    if (!attached) return nullptr;
     void *img = GetImageByName(image);
 	if (!img) {
 		__android_log_print(ANDROID_LOG_ERROR, IL2CPP_LOG_TAG, "Can't find image %s!", image);
@@ -414,7 +412,7 @@ Method *Il2CppAPI::GetMethodByName(const char *image, const char *namespaze, con
 		skip:
 		if (score == argsCount) {
 			__android_log_print(ANDROID_LOG_DEBUG, IL2CPP_LOG_TAG, "%s - [%s] %s::%s: %p", image, namespaze, clazz, name, *method);
-			return (Method*)method;
+			return method;
 		}
 		method = (void **) il2cpp_class_get_methods(klass, &iter);
 	}
@@ -423,7 +421,7 @@ Method *Il2CppAPI::GetMethodByName(const char *image, const char *namespaze, con
 }
 
 size_t Il2CppAPI::GetFieldByName(const char *image, const char *namespaze, const char *clazz, const char *name) {
-    if (!this->attached) return -1;
+    if (!attached) return -1;
     void *img = GetImageByName(image);
 	if (!img) {
 		__android_log_print(ANDROID_LOG_ERROR, IL2CPP_LOG_TAG, "Can't find image %s!", image);
@@ -509,18 +507,6 @@ Il2CppString *Il2CppString::Create(const wchar_t *s, int len) {
     return il2cpp_string_new_utf16(s, len);
 }
 
-void *Il2CppMethod::Invoke(void *object, void **args) {
-    if (!il2cppAttached) return nullptr;
-    void *exc;
-    void *result = il2cpp_runtime_invoke(this, object, args, &exc);
-    return result;
-}
-void *Il2CppMethod::ReplaceTo(void *newMethod) {
-    void *oldMethod = *(void **) ((uintptr_t)this + 0x0);
-    *(void **) ((uintptr_t)this + 0x0) = newMethod;
-    return oldMethod;
-}
-
 void *Il2CppAPI::GetClassType(const std::string &imageNamespaceClass) {
     std::string imageName;
     std::string nameSpace;
@@ -593,7 +579,7 @@ void Il2CppAPI::SetFieldValue(const std::string &imageNamespaceClass, const char
     return SetFieldValue(imageName.c_str(), nameSpace.c_str(), className.c_str(), fieldName, value);
 }
 
-Il2CppTypes::Method *Il2CppAPI::GetMethodByName(const std::string &imageNamespaceClass, const char *methodName, int argsCount) {
+void *Il2CppAPI::GetMethodByName(const std::string &imageNamespaceClass, const char *methodName, int argsCount) {
     std::string imageName;
     std::string nameSpace;
     std::string className;
@@ -611,7 +597,7 @@ Il2CppTypes::Method *Il2CppAPI::GetMethodByName(const std::string &imageNamespac
     return GetMethodByName(imageName.c_str(), nameSpace.c_str(), className.c_str(), methodName, argsCount);
 }
 
-Il2CppTypes::Method *Il2CppAPI::GetMethodByName(const std::string &imageNamespaceClass, const char *methodName, char **args, int argsCount) {
+void *Il2CppAPI::GetMethodByName(const std::string &imageNamespaceClass, const char *methodName, char **args, int argsCount) {
     std::string imageName;
     std::string nameSpace;
     std::string className;

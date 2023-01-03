@@ -121,13 +121,7 @@ struct Il2CppObject
     void *monitor;
 };
 
-struct Il2CppMethod {
-    void *Invoke(void *object, void **args = 0);
-    void *ReplaceTo(void *newMethod);
-};
-
 namespace Il2CppTypes {
-typedef Il2CppMethod Method;
 typedef Il2CppClass Class;
 typedef Il2CppObject Object;
 typedef Il2CppString String;
@@ -139,26 +133,9 @@ template<typename K, typename V>
 using Dictionary = Il2CppDictionary<K, V>;
 }
 
-class Il2CppAPI {
-public:
-    /**
-     * @brief Construct a new Il2CppAPI object,
-     * @brief  IMPORTANT Call this before use any functions even in Il2CppTypes Struct functions
-     * @param lib_name 
-     */
-    Il2CppAPI(const char *lib_name="libil2cpp.so");
-    /**
-     * @brief Construct a new Il2CppAPI object (bypass) may not work,
-     * @brief  IMPORTANT Call this before use any functions even in Il2CppTypes Struct functions
-     * @param env
-     * @param lib_name 
-     */
-    Il2CppAPI(JNIEnv *env, const char *lib_name="libil2cpp.so");
-    Il2CppAPI(Il2CppAPI &&) = default;
-    Il2CppAPI(const Il2CppAPI &) = default;
-    Il2CppAPI &operator=(Il2CppAPI &&) = default;
-    Il2CppAPI &operator=(const Il2CppAPI &) = default;
-    ~Il2CppAPI();
+namespace Il2CppAPI {
+    void InitAPI(const char *lib_name="libil2cpp.so");
+    void InitAPI(JNIEnv *env, const char *lib_name="libil2cpp.so");
 
     void *GetLibHandle();
     uintptr_t GetAbsolouteAddress();
@@ -174,8 +151,8 @@ public:
 	Il2CppTypes::Class *CreateClassInstance(const char *image, const char *namespaze, const char *clazz);
 	void GetFieldValue(const char *image, const char *namespaze, const char *clazz, const char *name, void *output);
 	void SetFieldValue(const char *image, const char *namespaze, const char *clazz, const char *name, void* value);
-    Il2CppTypes::Method *GetMethodByName(const char *image, const char *namespaze, const char *clazz, const char *name, int argsCount);
-    Il2CppTypes::Method *GetMethodByName(const char *image, const char *namespaze, const char *clazz, const char *name, char **args, int argsCount);
+    void *GetMethodByName(const char *image, const char *namespaze, const char *clazz, const char *name, int argsCount);
+    void *GetMethodByName(const char *image, const char *namespaze, const char *clazz, const char *name, char **args, int argsCount);
 	size_t GetFieldByName(const char *image, const char *namespaze, const char *clazz, const char *name);
 
     /**
@@ -216,7 +193,7 @@ public:
      * @param argsCount 
      * @return Il2CppTypes::Method* 
      */
-    Il2CppTypes::Method *GetMethodByName(const std::string &imageNamespaceClass, const char *methodName, int argsCount);
+    void *GetMethodByName(const std::string &imageNamespaceClass, const char *methodName, int argsCount);
     /**
      * @brief Get the Method By Name object, static/dynamic
      * 
@@ -226,7 +203,7 @@ public:
      * @param argsCount 
      * @return Il2CppTypes::Method* 
      */
-    Il2CppTypes::Method *GetMethodByName(const std::string &imageNamespaceClass, const char *methodName, char **args, int argsCount);
+    void *GetMethodByName(const std::string &imageNamespaceClass, const char *methodName, char **args, int argsCount);
     /**
      * @brief Get the Field By Name object, static/dynamic
      * 
@@ -235,14 +212,6 @@ public:
      * @return size_t 
      */
 	size_t GetFieldByName(const std::string &imageNamespaceClass, const char *fieldName);
-
-private:
-    void *lib_handle;
-    bool attached;
-    uintptr_t absoulute_address;
-    const char *absoulute_path;
-    const char *target_lib;
-    bool IsStaticField(void *field);
 };
 
 #endif //IL2CPP_API_H
