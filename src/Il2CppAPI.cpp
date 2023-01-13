@@ -9,7 +9,6 @@
 #include <locale>
 #include <map>
 #include <obfuscate.h>
-#include "unity/Vector3.h"
 
 using namespace Il2CppTypes;
 

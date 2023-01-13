@@ -13,9 +13,11 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/Obfuscate
     ${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include)
 
+file(GLOB SRC_UNITY_TYPES src/Unity/*.cpp)
+
 add_library(Il2CppAPI STATIC
     src/Il2CppAPI.cpp
-    src/unity/Vector3.cpp
+    ${SRC_UNITY_TYPES}
     )
 
 option(DOBBY_GENERATE_SHARED "Build shared library" OFF)

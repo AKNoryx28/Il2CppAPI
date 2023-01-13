@@ -6,10 +6,13 @@
 #include <jni.h>
 #include <inttypes.h>
 #include <string>
+#include "Unity/Vector3.h"
+#include "Unity/Vector2.h"
+#include "Unity/Vector3.h"
+#include "Unity/Quaternion.h"
+#include "Unity/Unity.h"
 
 #define IL2CPP_LOG_TAG "IL2CPP_LOG"
-
-struct Vector3;
 
 template<typename T> struct Il2CppArray {
     void *klass;
