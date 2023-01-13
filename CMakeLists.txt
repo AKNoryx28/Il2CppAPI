@@ -15,7 +15,7 @@ include_directories(
 
 add_library(Il2CppAPI STATIC
     src/Il2CppAPI.cpp
-    #src/fake_dlfcn/fake_dlfcn.cpp
+    src/unity/Vector3.cpp
     )
 
 option(DOBBY_GENERATE_SHARED "Build shared library" OFF)

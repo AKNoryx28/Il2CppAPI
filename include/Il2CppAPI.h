@@ -9,6 +9,8 @@
 
 #define IL2CPP_LOG_TAG "IL2CPP_LOG"
 
+struct Vector3;
+
 template<typename T> struct Il2CppArray {
     void *klass;
     void *monitor;
@@ -133,6 +135,12 @@ template<typename K, typename V>
 using Dictionary = Il2CppDictionary<K, V>;
 }
 
+enum MonoOrStereoscopicEye {
+    Left = 0,
+    Right = 1,
+    Mono = 2,
+};
+
 namespace Il2CppAPI {
     void InitAPI(const char *lib_name="libil2cpp.so");
     void InitAPI(JNIEnv *env, const char *lib_name="libil2cpp.so");
@@ -212,6 +220,16 @@ namespace Il2CppAPI {
      * @return size_t 
      */
 	size_t GetFieldByName(const std::string &imageNamespaceClass, const char *fieldName);
+
+
+    namespace UnityEngine {
+        void *GetTransform(void *object);
+        Vector3 GetPossition(void *transform);
+        Vector3 WorldToScreenPoint(void *cam, Vector3 pos, MonoOrStereoscopicEye eye);
+        Vector3 ScreenToWorldPoint(void *cam, Vector3 pos, MonoOrStereoscopicEye eye);
+        Vector3 ScreenToViewportPoint(void *cam, Vector3 pos);
+        void *GetCamera();
+    }
 };
 
 #endif //IL2CPP_API_H
