@@ -730,50 +730,75 @@ size_t Il2CppAPI::GetFieldByName(const std::string &imageNamespaceClass,
                         fieldName);
 }
 
+#if defined(__arm__)
+#define CAST_FUNC(ret, args, void_ptr)                                         \
+  (ret(*) args)((void *)(uintptr_t)void_ptr)
+#elif defined(__aarch64__)
+#define CAST_FUNC(ret, args, void_ptr)                                         \
+  (ret(*) args)(*(void **)(uintptr_t)void_ptr)
+#elif defined(__i386__) || defined(__x86_64__)
+#define CAST_FUNC(ret, args, void_ptr) (ret(*) args)((void *)(intptr_t)void_ptr)
+#endif
+
+static void *__ptrGetTF, *__ptrGetPos, *__ptrWorld2ScreenPnt, *__ptrScreen2WorldPnt, *__ptrScreenToViewportPnt, *__Get_main;
+
 void *Il2CppAPI::UnityEngine::GetTransform(void *object) {
     if (!object || !attached) return nullptr;
-    void *ptrGetTF = Il2CppAPI::GetMethodByName("UnityEngine.CoreModule:UnityEngine::Component", "get_transform", 0);
-    if (!ptrGetTF) return nullptr;
-    static const auto get_transform = reinterpret_cast<uintptr_t(__fastcall *)(void *)>(*(void**)ptrGetTF);
-    return (void*)get_transform(object);
+    if (!__ptrGetTF)
+        __ptrGetTF = Il2CppAPI::GetMethodByName("UnityEngine.CoreModule:UnityEngine::Component", "get_transform", 0);
+    if (!__ptrGetTF) return nullptr;
+
+    void *(*get_transform)(void*) = CAST_FUNC(void*, (void*), __ptrGetTF);
+    void *ret = get_transform(object);
+    __android_log_print(ANDROID_LOG_DEBUG, IL2CPP_LOG_TAG, "Transform: %p", ret);
+    return ret;
 }
 
 Vector3 Il2CppAPI::UnityEngine::GetPossition(void *transform) {
     if (!transform || !attached) return Vector3();
-    void *ptrGetPos = Il2CppAPI::GetMethodByName("UnityEngine.CoreModule:UnityEngine::Transform", "get_position_Injected", 1);
-    if (!ptrGetPos) return Vector3();
+    if (!__ptrGetPos)
+        __ptrGetPos = Il2CppAPI::GetMethodByName("UnityEngine.CoreModule:UnityEngine::Transform", "get_position_Injected", 1);
+    if (!__ptrGetPos) return Vector3();
+
     Vector3 retPos;
-    static const auto get_position = reinterpret_cast<uintptr_t(__fastcall *)(void *,Vector3 &)>(*(void**)ptrGetPos);
+    void (*get_position)(void*, Vector3 &) = CAST_FUNC(void, (void*,Vector3&), __ptrGetPos);
     get_position(transform, retPos);
     return retPos;
 }
 
 Vector3 Il2CppAPI::UnityEngine::WorldToScreenPoint(void *cam, Vector3 pos, MonoOrStereoscopicEye eye) {
     if (!cam || !attached) return Vector3();
-    void *ptrWorld2ScreenPnt = Il2CppAPI::GetMethodByName("UnityEngine.CoreModule:UnityEngine::Camera", "WorldToScreenPoint_Injected", 3);
-    if (!ptrWorld2ScreenPnt) return Vector3();
+    if (!__ptrWorld2ScreenPnt)
+        __ptrWorld2ScreenPnt = Il2CppAPI::GetMethodByName("UnityEngine.CoreModule:UnityEngine::Camera", "WorldToScreenPoint_Injected", 3);
+    if (!__ptrWorld2ScreenPnt) return Vector3();
+
     Vector3 retPos;
-    static const auto WorldToScreenPoint = reinterpret_cast<uintptr_t(__fastcall *)(void *,Vector3, MonoOrStereoscopicEye, Vector3 &)>(*(void**)ptrWorld2ScreenPnt);
+    void (*WorldToScreenPoint)(void*,Vector3,MonoOrStereoscopicEye, Vector3&) = CAST_FUNC(void, (void*,Vector3,MonoOrStereoscopicEye, Vector3&), __ptrWorld2ScreenPnt);
     WorldToScreenPoint(cam, pos, eye, retPos);
     return retPos;
 }
 
 Vector3 Il2CppAPI::UnityEngine::ScreenToWorldPoint(void *cam, Vector3 pos, MonoOrStereoscopicEye eye) {
     if (!cam || !attached) return Vector3();
-    void *ptrScreen2WorldPnt = Il2CppAPI::GetMethodByName("UnityEngine.CoreModule:UnityEngine::Camera", "ScreenToWorldPoint_Injected", 3);
-    if (!ptrScreen2WorldPnt) return Vector3();
+    if (!__ptrScreen2WorldPnt)
+        __ptrScreen2WorldPnt = Il2CppAPI::GetMethodByName("UnityEngine.CoreModule:UnityEngine::Camera", "ScreenToWorldPoint_Injected", 3);
+    if (!__ptrScreen2WorldPnt) return Vector3();
+
+
     Vector3 retPos;
-    static const auto ScreenToWorldPoint = reinterpret_cast<uintptr_t(__fastcall *)(void *,Vector3, MonoOrStereoscopicEye, Vector3 &)>(*(void**)ptrScreen2WorldPnt);
-    ScreenToWorldPoint (cam, pos, eye, retPos);
+    void (*ScreenToWorldPoint)(void*,Vector3,MonoOrStereoscopicEye, Vector3&) = CAST_FUNC(void, (void*,Vector3,MonoOrStereoscopicEye, Vector3&), __ptrScreen2WorldPnt);
+    ScreenToWorldPoint(cam, pos, eye, retPos);
     return retPos;
 }
 
 Vector3 Il2CppAPI::UnityEngine::ScreenToViewportPoint(void *cam, Vector3 pos) {
     if (!cam || !attached) return Vector3();
-    void *ptrScreenToViewportPnt = Il2CppAPI::GetMethodByName("UnityEngine.CoreModule:UnityEngine::Camera", "ScreenToViewportPoint_Injected", 2);
-    if (!ptrScreenToViewportPnt) return Vector3();
+    if (!__ptrScreenToViewportPnt)
+        __ptrScreenToViewportPnt = Il2CppAPI::GetMethodByName("UnityEngine.CoreModule:UnityEngine::Camera", "ScreenToViewportPoint_Injected", 2);
+    if (!__ptrScreenToViewportPnt) return Vector3();
+
     Vector3 retPos;
-    static const auto ScreenToViewportPoint = reinterpret_cast<uintptr_t(__fastcall *)(void *,Vector3, Vector3 &)>(*(void**)ptrScreenToViewportPnt);
+    void (*ScreenToViewportPoint)(void *,Vector3, Vector3 &) = CAST_FUNC(void, (void *,Vector3, Vector3 &), __ptrScreenToViewportPnt);
     ScreenToViewportPoint(cam, pos, retPos);
     return retPos;
 
@@ -781,7 +806,11 @@ Vector3 Il2CppAPI::UnityEngine::ScreenToViewportPoint(void *cam, Vector3 pos) {
 
 void *Il2CppAPI::UnityEngine::GetCamera() {
     if (!attached) return nullptr;
-    void *ptrGet_main = Il2CppAPI::GetMethodByName("UnityEngine.CoreModule:UnityEngine::Camera", "get_main", 0); 
-    static const auto get_cam_main = reinterpret_cast<uintptr_t(__fastcall *)()>(*(void**)ptrGet_main);
-    return (void*)get_cam_main();
+    if (!__Get_main)
+        __Get_main = Il2CppAPI::GetMethodByName("UnityEngine.CoreModule:UnityEngine::Camera", "get_main", 0); 
+    if (!__Get_main) return nullptr;
+    void *(*get_cam_main)() = CAST_FUNC(void*, (), __Get_main);
+    void *ret = get_cam_main();
+    __android_log_print(ANDROID_LOG_DEBUG, IL2CPP_LOG_TAG, "Main Camera: %p", ret);
+    return ret;
 }
