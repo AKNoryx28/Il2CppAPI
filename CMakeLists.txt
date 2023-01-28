@@ -17,6 +17,7 @@ file(GLOB SRC_UNITY_TYPES src/Unity/*.cpp)
 
 add_library(Il2CppAPI STATIC
     src/Il2CppAPI.cpp
+    src/UnityEngine.cpp
     ${SRC_UNITY_TYPES}
     )
 

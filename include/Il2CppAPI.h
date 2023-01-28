@@ -126,6 +126,7 @@ struct Il2CppObject
     void *monitor;
 };
 
+
 namespace Il2CppTypes {
 typedef Il2CppClass Class;
 typedef Il2CppObject Object;
@@ -226,13 +227,55 @@ namespace Il2CppAPI {
 
 
     namespace UnityEngine {
-        void *GetTransform(void *object);
-        Vector3 GetPossition(void *transform);
-        Vector3 WorldToScreenPoint(void *cam, Vector3 pos, MonoOrStereoscopicEye eye);
-        Vector3 ScreenToWorldPoint(void *cam, Vector3 pos, MonoOrStereoscopicEye eye);
-        Vector3 ScreenToViewportPoint(void *cam, Vector3 pos);
-        void *GetCamera();
+        void Init();
+        bool isValid();
+
+        class Transform;
+        class Component {
+            public:
+            Transform *get_transform();
+            void *get_gameObject();
+            Component *GetComponent(void *type);
+        };
+
+        class Transform : Component {
+            public:
+            Vector3 get_position();
+            void set_position(Vector3 value);
+            Quaternion get_rotation();
+            void set_rotation(Quaternion value);
+            Vector3 get_localScale();
+            void set_localScale(Vector3 value);
+        };
+
+        class Camera : Component {
+            public:
+            static Camera *get_main();
+            float get_fieldOfView();
+            void set_fieldOfView(float value);
+            Vector3 WorldToScreenPoint(Vector3 value);
+            Vector3 WorldToViewportPoint(Vector3 value);
+            Vector3 ViewportToWorldPoint(Vector3 value);
+            Vector3 ScreenToWorldPoint(Vector3 value);
+            Vector3 ScreenToViewportPoint(Vector3 value);
+            Vector3 ViewportToScreenPoint(Vector3 value);
+        };
+
+        class Screen {
+            public:
+            static int get_width();
+            static int get_height();
+            static float get_dpi();
+            static void SetResolution(int width, int height, bool fullscreen = true);
+        };
     }
 };
+
+namespace Il2CppTypes {
+typedef Il2CppAPI::UnityEngine::Component Component;
+typedef Il2CppAPI::UnityEngine::Transform Transform;
+typedef Il2CppAPI::UnityEngine::Camera Camera;
+typedef Il2CppAPI::UnityEngine::Screen Screen;
+}
 
 #endif //IL2CPP_API_H
