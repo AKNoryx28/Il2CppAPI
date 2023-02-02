@@ -13,7 +13,7 @@
     ```
 - Output out/<arch>/libIl2CppAPI.a
 
-## Add to your `CMakeLists.txt`
+## `CMakeLists.txt`
 ```cmake
 add_library(il2cppapi-lib STATIC IMPORTED)
 set_target_properties(il2cppapi-lib
@@ -24,4 +24,17 @@ target_link_libraries(
     ...
     l2cppapi-lib
 )
+```
+
+## `Android.mk`
+```mk
+...
+
+include $(CLEAR_VARS)
+LOCAL_MODULE            := libil2cppapi
+LOCAL_SRC_FILES         := out/$(TARGET_ARCH_ABI)/libIl2CppAPI.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+LOCAL_STATIC_LIBRARIES += libil2cppapi
+
 ```
